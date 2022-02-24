@@ -1,20 +1,30 @@
 
+// IMPL
+
 #include <stdlib.h>
 #include <unistd.h>
 
-#define     WID     800     // HEADER
-#define     HGT     600     // HEADER
+// ENDIMPL
 
-#include <SDL.h>        // HEADER
+#define     WID     800
+#define     HGT     600
 
-SDL_Renderer *renderer; // HEADER
+#include <SDL2/SDL.h>
 
+// IFNIMPL extern
+SDL_Renderer *renderer;
+
+
+// IMPL
 
 //#include "pix.c"
 #include "loop.c"
 
+// ENDIMPL
+
 
 int main( int argc , char *argv[] )
+// IMPL
 { 
     
   SDL_Window *win = 
@@ -31,3 +41,6 @@ int main( int argc , char *argv[] )
   
   return 0 ;
 }
+// ENDIMPL
+
+

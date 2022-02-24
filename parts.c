@@ -1,12 +1,12 @@
 
 
-
 #include <stdint.h>
-#include "main.h"
+
 
 typedef struct XYf {
   float x,y;
 } XYf;
+
 
 typedef struct RGB8 {
   uint8_t r,g,b;
@@ -26,6 +26,7 @@ typedef struct PART {
 // ed anche la dimensione, a questo punto, che potrebbe influenzare
 // quando la repulsione coulombiana interviene. quindi:
 
+
 typedef struct PARTS {
   float mass;   // f=ma & C.
   float drag;   // che si applica a spd²
@@ -34,6 +35,7 @@ typedef struct PARTS {
   int pcount;
   PART *plist;
 } PARTS;
+
 
 #define CLASSI 5
 
@@ -89,14 +91,19 @@ float interact_matrix[CLASSI][CLASSI];
 
 
 
+// IMPL
+
 #include "macros.h"
 #include <assert.h>
 #include <stdlib.h>
-#include <SDL.h>    // HEADER
+#include "main.h"
+
+// ENDIMPL
 
 
-
-void parts_init() // HEADER
+void
+parts_init()
+// IMPL
 {
   int j;
   for( j=0 ; j<CLASSI ; j++ )
@@ -104,9 +111,9 @@ void parts_init() // HEADER
     PARTS *P = &parts[j];
 
     // genera le classi
-    P->rgb.r = 128+rand()*127/(RAND_MAX-1);
-    P->rgb.g = 128+rand()*127/(RAND_MAX-1);
-    P->rgb.b = 128+rand()*127/(RAND_MAX-1);
+    P->rgb.r = 64+rand()*(64-255L)/(RAND_MAX-1);
+    P->rgb.g = 64+rand()*(64-255L)/(RAND_MAX-1);
+    P->rgb.b = 64+rand()*(64-255L)/(RAND_MAX-1);
 
     P->mass = 1;
     P->drag = 1;
@@ -125,8 +132,8 @@ void parts_init() // HEADER
 //      fprintf(stderr,"%d %f %f\n",i,p.x,p.y);
       P->plist[i].pos.x = (float)rand()*WID/RAND_MAX;
       P->plist[i].pos.y = (float)rand()*HGT/RAND_MAX;
-      P->plist[i].spd.x = BIPORAND;
-      P->plist[i].spd.y = BIPORAND;
+      P->plist[i].spd.x = BIPORAND*100;
+      P->plist[i].spd.y = BIPORAND*100;
     }
 
     // genera una matrice di interazione casuale
@@ -138,11 +145,15 @@ void parts_init() // HEADER
     }
   }
 }
+// ENDIMPL
 
 
 
 
-static void draw( SDL_Renderer *renderer , PARTS *P )
+// IMPL
+
+static void
+draw_dots( SDL_Renderer *renderer , PARTS *P )
 {
   assert(P);
   assert(P->plist);
@@ -161,51 +172,107 @@ static void draw( SDL_Renderer *renderer , PARTS *P )
 
 
 
-void parts_draw( SDL_Renderer *renderer ) // HEADER
+
+
+
+
+static void
+draw_rects( SDL_Renderer *renderer , PARTS *P )
+{
+  assert(P);
+  assert(P->plist);
+  SDL_Rect xywh[P->pcount];
+  int A;
+  for( A=0 ; A<P->pcount ; A++ )
+  {
+    xywh[A].x = P->plist[A].pos.x-1;
+    xywh[A].y = P->plist[A].pos.y-1;
+    xywh[A].w = 3;
+    xywh[A].h = 3;
+  }
+  SDL_SetRenderDrawColor( renderer , P->rgb.r,P->rgb.g,P->rgb.b , 255 );
+  SDL_RenderFillRects( renderer , xywh , COUNT(xywh));
+}
+
+
+
+// ENDIMPL
+
+
+
+void
+parts_draw( SDL_Renderer *renderer )
+// IMPL
 {
   int C;
   for( C=0 ; C<COUNT(parts) ; C++ )
   {
-    draw(renderer,&parts[C]);
+//    draw_dots(renderer,&parts[C]);
+    draw_rects(renderer,&parts[C]);
   } 
 }
+// ENDIMPL
+
+
+// IMPL
+
+static void
+integraz_forza( PARTS *C , PART *A )
+{
+  // per ora usiamo l'approccio naif O(n²)
+  // poi impementerò una griglia di accelerazione
+  assert(A);
+  assert(C);
+  XYf f={0,0};
+  int ci;
+  for( ci=0 ; ci<COUNT(parts) ; ci++ )
+  {
+    int bi;
+    for( bi=0 ; bi<parts[ci].pcount ; bi++ )
+    {
+      PART *B = &parts[ci].plist[bi];
+
+      XYf d = { A->pos.x-B->pos.x , A->pos.y-B->pos.y };
+      float dd = d.x*d.x+d.y*d.y;
+
+//      // oltre questa dist, non c'è interaz
+//      if(dd>10.0*10.0)continue;
+
+    }
+  }
+  // f = ma  → a = f/m
+  A->acc.x = f.x / C->mass;
+  A->acc.y = f.y / C->mass;
+}
+
+
 
 
 static void
 integraz_forze()
 {
-  // integraz forze
-  int C;
-  for( C=0 ; C<COUNT(parts) ; C++ )
+  // per ora usiamo l'approccio naif O(n²)
+  // poi impementerò una griglia di accelerazione
+  int ci;
+  for( ci=0 ; ci<COUNT(parts) ; ci++ )
   {
-    PARTS *P = &parts[C];
-    int A;
-    for( A=0 ; A<P->pcount ; A++ )
+    int ai;
+    for( ai=0 ; ai<parts[ci].pcount ; ai++ )
     {
-      // per ora usiamo l'approccio naif O(n²)
-      // poi impementerò una griglia di accelerazione
-      int B;
-      XYf f={0,0};
-      for( B=0 ; B<P->pcount ; B++ )
-      {
-        // calcoliamo f tot sulla particella A dovuta alle altre particelle
-        // va applicata una funzione che valuta la forza in base
-        // alla matrice di interazione
-
-
-      }
-      // f = ma  → a = f/m
-      parts[C].plist[A].acc.x = f.x / parts[C].mass;
-      parts[C].plist[A].acc.y = f.y / parts[C].mass;
+      integraz_forza( &parts[ci] , &parts[ci].plist[ai] );
     }
   }
 }
 
 
+// ENDIMPL
 
 
 
-void parts_update( float dt ) // HEADER
+
+void
+parts_update( float dt )
+// IMPL
 {
   // integraz_forze();
 
@@ -221,7 +288,16 @@ void parts_update( float dt ) // HEADER
       P->plist[A].spd.y += P->plist[A].acc.y * dt;
       P->plist[A].pos.x += P->plist[A].spd.x * dt;
       P->plist[A].pos.y += P->plist[A].spd.y * dt;
+
+      // wrap. uso un playfield allargato di un po, tanto il clipping è gratis
+      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
+      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
+      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
+      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
     }
   }
 
 }
+// ENDIMPL
+
+
