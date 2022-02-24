@@ -1,5 +1,7 @@
 
 
+#include <SDL.h>    // HEADER
+
 #include <stdint.h>
 
 
@@ -16,7 +18,6 @@ typedef struct RGB8 {
 typedef struct PART {
   XYf pos;
   XYf spd;
-  XYf acc;
 } PART;
 
 
@@ -60,19 +61,13 @@ PARTS parts[CLASSI];
 
 
 
-// IMPL
-
 #include "macros.h"
 #include <assert.h>
 #include <stdlib.h>
 #include "main.h"
 
-// ENDIMPL
 
-
-void
-parts_init()
-// IMPL
+void parts_init() // HEADER
 {
   const RGB8 rgb[]={
     {  63 ,  63 ,  63 },
@@ -126,12 +121,7 @@ parts_init()
     }
   }
 }
-// ENDIMPL
 
-
-
-
-// IMPL
 
 static void
 draw_dots( SDL_Renderer *renderer , PARTS *P )
@@ -177,15 +167,10 @@ draw_rects( SDL_Renderer *renderer , PARTS *P )
 
 
 
-// ENDIMPL
 
 
 
-
-
-void
-parts_draw( SDL_Renderer *renderer )
-// IMPL
+void parts_draw( SDL_Renderer *renderer ) // HEADER
 {
   int C;
   for( C=0 ; C<COUNT(parts) ; C++ )
@@ -194,10 +179,8 @@ parts_draw( SDL_Renderer *renderer )
     draw_rects(renderer,&parts[C]);
   } 
 }
-// ENDIMPL
 
 
-// IMPL
 
 static float
 sign( float x )
@@ -234,14 +217,14 @@ integraz_forza( PARTS *C , PART *A )
       float rr = d.x*d.x+d.y*d.y; // d²
 
       // oltre questa dist, non c'è interaz
-      if(rr>20.0*20.0)continue;
+      if(rr>10.0*10.0)continue;
 
       // quasi https://it.wikipedia.org/wiki/Potenziale_di_Lennard-Jones
       float r6  = rr*rr*rr; // d²*³=d⁶
       float r12 = rr*rr*rr*rr*rr*rr; // d²*⁶=d¹²
 
 // evitiamo div0 e comportamenti brutti
-      float f = 10/(r12+EPS)-100/(rr+EPS);
+      float f = 1/(r12+EPS)-1/(rr+EPS);
       if(f>+MAXF) f=+MAXF; else
       if(f<-MAXF) f=-MAXF;
 
@@ -268,13 +251,11 @@ integraz_forza( PARTS *C , PART *A )
 
   // drag
   // modellato come ... boh
-  A->spd.x *= 0.999;
-  A->spd.y *= 0.999;
+  A->spd.x *= 0.99;
+  A->spd.y *= 0.99;
 
-  // f = ma  → a = f/m
-  A->acc.x = fsum.x / C->mass;
-  A->acc.y = fsum.y / C->mass;
-
+  A->spd.x += fsum.x / C->mass;
+  A->spd.y += fsum.y / C->mass;
 }
 
 
@@ -300,14 +281,11 @@ integraz_forze()
 }
 
 
-// ENDIMPL
 
 
 
 
-void
-parts_update( float dt )
-// IMPL
+void parts_update( float dt )    // HEADER
 {
   integraz_forze();
 
@@ -319,20 +297,17 @@ parts_update( float dt )
     int A;
     for( A=0 ; A<P->pcount ; A++ )
     {
-      P->plist[A].spd.x += P->plist[A].acc.x * dt;
-      P->plist[A].spd.y += P->plist[A].acc.y * dt;
       P->plist[A].pos.x += P->plist[A].spd.x * dt;
       P->plist[A].pos.y += P->plist[A].spd.y * dt;
 
-//      // wrap. uso un playfield allargato, tanto il clipping è gratis
-//      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
-//      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
-//      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
-//      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
+      // wrap. uso un playfield allargato, tanto il clipping è gratis
+      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
+      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
+      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
+      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
     }
   }
 
 }
-// ENDIMPL
 
 
