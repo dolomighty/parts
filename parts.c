@@ -26,6 +26,8 @@ typedef struct PART {
 // ed anche la dimensione, a questo punto, che potrebbe influenzare
 // quando la repulsione coulombiana interviene. quindi:
 
+#define CLASSI 8
+
 
 typedef struct PARTS {
   float mass;   // f=ma & C.
@@ -34,47 +36,14 @@ typedef struct PARTS {
   RGB8 rgb;
   int pcount;
   PART *plist;
+  float interact_matrix[CLASSI];
 } PARTS;
-
-
-#define CLASSI 5
 
 
 // IFNIMPL extern
 PARTS parts[CLASSI];
 
 
-// con N classi, bisogna capire come farle interagire elegantemente
-// alla fine, bisogna arrivare alla forza di interazione
-// finter(a,b) non è necessariamente = finter(b,a)
-// quindi penso ad una matrice NxN. vediamo:
-
-
-
-/*
-
-
-// es famo che:
-// classe 0 è attirata dalla 1 ma è respinta dalla 2
-// classe 1 è attratta da tutti
-// classe 2 è respinta da tutti
-
-// valori negativi attraggono, positivi respingono
-
-{
-// classe    0     1      2    3   4
-      {    0   , -0.1 , +0.1 , 0 , 0   },  // classe 0
-      {   -0.1 ,  0   , +0.1 , 0 , 0   },  // classe 1
-      {   +0.2 , -0.1 ,  0   , 0 , 0   },  // classe 2
-      {    0   , -0.1 , +0.1 , 0 , 0   },  // classe 3
-      {    0   , -0.1 , +0.1 , 0 , 0   },  // classe 4
-};
-
-
-*/
-
-// IFNIMPL extern
-float interact_matrix[CLASSI][CLASSI];
 
 // volendo un'approccio statico.
 // se volessimo un approccio dinamico, userei una hash
@@ -105,19 +74,40 @@ void
 parts_init()
 // IMPL
 {
+  const RGB8 rgb[]={
+    {  63 ,  63 ,  63 },
+    {  63 ,  63 , 255 },
+    {  63 , 255 ,  63 },
+    {  63 , 255 , 255 },
+    { 255 ,  63 ,  63 },
+    { 255 ,  63 , 255 },
+    { 255 , 255 ,  63 },
+    { 255 , 255 , 255 },
+  };
   int j;
   for( j=0 ; j<CLASSI ; j++ )
   {
     PARTS *P = &parts[j];
-
     // genera le classi
-    P->rgb.r = 64+rand()*(64-255L)/(RAND_MAX-1);
-    P->rgb.g = 64+rand()*(64-255L)/(RAND_MAX-1);
-    P->rgb.b = 64+rand()*(64-255L)/(RAND_MAX-1);
+
+//    // colore
+//    P->rgb.r = 64+rand()*(64-255L)/(RAND_MAX-1);
+//    P->rgb.g = 64+rand()*(64-255L)/(RAND_MAX-1);
+//    P->rgb.b = 64+rand()*(64-255L)/(RAND_MAX-1);
+
+    P->rgb = rgb[j];
 
     P->mass = 1;
-    P->drag = 1;
+    P->drag = 0.1;
     P->radius = 1;
+
+    // genera una matrice di interazione
+    memset(P->interact_matrix,0,sizeof(P->interact_matrix));
+    int i;
+    for( i=0 ; i<CLASSI ; i++ )
+    {
+      P->interact_matrix[i] = BIPORAND * 1;
+    }
 
     // crea le particelle e le posiziona a casaccio
     P->pcount=200;
@@ -126,22 +116,13 @@ parts_init()
     assert(P->plist);
     memset(P->plist,0,bytes);
 
-    int i;
     for( i=0 ; i<P->pcount ; i++ )
     {
 //      fprintf(stderr,"%d %f %f\n",i,p.x,p.y);
       P->plist[i].pos.x = (float)rand()*WID/RAND_MAX;
       P->plist[i].pos.y = (float)rand()*HGT/RAND_MAX;
-      P->plist[i].spd.x = BIPORAND*100;
-      P->plist[i].spd.y = BIPORAND*100;
-    }
-
-    // genera una matrice di interazione casuale
-    memset(interact_matrix,0,sizeof(interact_matrix));
-    for( i=0 ; i<CLASSI ; i++ )
-    {
-      if(i==j)continue;   // interazione con se stessa nulla (non avrebbe molto senso in questo contesto)
-      interact_matrix[j][i] = BIPORAND * 0.1;
+      P->plist[i].spd.x = BIPORAND*10;
+      P->plist[i].spd.y = BIPORAND*10;
     }
   }
 }
@@ -200,6 +181,8 @@ draw_rects( SDL_Renderer *renderer , PARTS *P )
 
 
 
+
+
 void
 parts_draw( SDL_Renderer *renderer )
 // IMPL
@@ -216,14 +199,28 @@ parts_draw( SDL_Renderer *renderer )
 
 // IMPL
 
+static float
+sign( float x )
+{
+  return x>0 ? +1 : -1;
+}
+
+
 static void
 integraz_forza( PARTS *C , PART *A )
 {
+  // integra le forze su A (della classe C)
+  // dovute a tutte le altre parts
+  // la dinamica avviene in un secondo momento
+
+  const float EPS  = 1e-5;
+  const float MAXF = 1e3;
+
   // per ora usiamo l'approccio naif O(n²)
   // poi impementerò una griglia di accelerazione
   assert(A);
   assert(C);
-  XYf f={0,0};
+  XYf fsum={0,0};
   int ci;
   for( ci=0 ; ci<COUNT(parts) ; ci++ )
   {
@@ -231,19 +228,57 @@ integraz_forza( PARTS *C , PART *A )
     for( bi=0 ; bi<parts[ci].pcount ; bi++ )
     {
       PART *B = &parts[ci].plist[bi];
+      if(B==A)continue; // auto-interazione? no grazie
 
       XYf d = { A->pos.x-B->pos.x , A->pos.y-B->pos.y };
-      float dd = d.x*d.x+d.y*d.y;
+      float rr = d.x*d.x+d.y*d.y; // d²
 
-//      // oltre questa dist, non c'è interaz
-//      if(dd>10.0*10.0)continue;
+      // oltre questa dist, non c'è interaz
+      if(rr>20.0*20.0)continue;
 
+      // quasi https://it.wikipedia.org/wiki/Potenziale_di_Lennard-Jones
+      float r6  = rr*rr*rr; // d²*³=d⁶
+      float r12 = rr*rr*rr*rr*rr*rr; // d²*⁶=d¹²
+
+// evitiamo div0 e comportamenti brutti
+      float f = 10/(r12+EPS)-100/(rr+EPS);
+      if(f>+MAXF) f=+MAXF; else
+      if(f<-MAXF) f=-MAXF;
+
+      // la particella B è di classe ci
+      fsum.x += d.x*f*C->interact_matrix[ci];
+      fsum.y += d.y*f*C->interact_matrix[ci];
     }
   }
+
+//  // drag
+//  // attrito modellato come forza opposta alla velocità
+//  // e proporzionale a vel²:
+//  //  fdrag = -spd * |spd|² / |spd| * Kdrag
+//  // e ok. vediamo come calcolarla al meglio:
+//  //  fdrag.x = x * (x²+y²) / √(x²+y²) * Kdrag
+//  // però se aggiungiamo che:
+//  //  d = √(x²+y²) →
+//  //  d² = d*d = (x²+y²)
+//  // perciò:
+//  //  fdrag = x*d*d/d*k = x*d*k
+//  float d = sqrt( A->spd.x*A->spd.x + A->spd.y*A->spd.y );
+//  fsum.x -= A->spd.x*d*0.001;
+//  fsum.y -= A->spd.y*d*0.001;
+
+  // drag
+  // modellato come ... boh
+  A->spd.x *= 0.999;
+  A->spd.y *= 0.999;
+
   // f = ma  → a = f/m
-  A->acc.x = f.x / C->mass;
-  A->acc.y = f.y / C->mass;
+  A->acc.x = fsum.x / C->mass;
+  A->acc.y = fsum.y / C->mass;
+
 }
+
+
+
 
 
 
@@ -274,7 +309,7 @@ void
 parts_update( float dt )
 // IMPL
 {
-  // integraz_forze();
+  integraz_forze();
 
   // integraz posizione
   int C;
@@ -289,11 +324,11 @@ parts_update( float dt )
       P->plist[A].pos.x += P->plist[A].spd.x * dt;
       P->plist[A].pos.y += P->plist[A].spd.y * dt;
 
-      // wrap. uso un playfield allargato di un po, tanto il clipping è gratis
-      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
-      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
-      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
-      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
+//      // wrap. uso un playfield allargato, tanto il clipping è gratis
+//      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
+//      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
+//      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
+//      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
     }
   }
 
