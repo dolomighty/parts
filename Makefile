@@ -11,7 +11,8 @@ DIR:=$(shell find -L -mindepth 1 -type d -not -wholename "*/.*" -printf "-I %P "
 
 
 
-CC=gcc
+#CC=gcc
+CC=g++
 LIBS    = `pkg-config --libs   sdl2` -lm   
 CPPFLAGS= `pkg-config --cflags sdl2` -Werror $(DIR)
 
