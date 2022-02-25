@@ -6,7 +6,7 @@ PRE:=$(shell ./mk-shell.sh)
 SRC:=$(shell find -type f -name "*.c" -or -name "*.cpp" -or -name "*.asm")
 HDR:=$(shell find -type f -name "*.h" -or -name "*.hpp")
 RES:=$(shell find -type f -name "*.png")
-DIR:=$(shell find -L -mindepth 1 -type d -not -wholename "*/.*" -printf "-I %P ")
+DIR:=$(shell echo "-I ../dyn/.." && find -L -mindepth 1 -type d -not -wholename "*/.*" -printf " -I %P")
 
 
 
