@@ -5,4 +5,6 @@ git reset
 git add .
 git status
 read -p "commit message: " MSG
-git commit -m $MSG
+[ -n "$MSG" ] || MSG=`date +"%F %T"`
+git commit -m "$MSG"
+sleep 2
