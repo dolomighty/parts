@@ -1,7 +1,9 @@
 
+#include <SDL.h>                // HEADER
 #include "parts.h"
+#include "main.h"
 
-void frame(SDL_Event event)
+void frame(SDL_Event event)     // HEADER
 {
 
     float dt = 0.1;

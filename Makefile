@@ -29,10 +29,11 @@ run : main
 
 
 OBS+=main.o
-#main.o : $(SRC) $(HDR)
-
 OBS+=parts.o
-#parts.o : $(SRC) $(HDR)
+OBS+=frame.o
+OBS+=loop.o
+
+
 
 $(OBS) : Makefile $(SRC) $(HDR)
 
