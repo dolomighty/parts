@@ -1,6 +1,8 @@
 #!/bin/sh
+$FIRST && FIRST=false exec xterm -e $0
 make clean
 git reset
 git add .
 git status
-git commit -m $1
+read -p "commit message: " MSG
+git commit -m $MSG
