@@ -177,7 +177,9 @@ static void draw_rects(SDL_Renderer * renderer, PARTS * P)
     SDL_RenderFillRects(renderer, xywh, COUNT(xywh));
 }
 
-void parts_draw(SDL_Renderer * renderer)        // HEADER
+
+
+void parts_draw(SDL_Renderer * renderer)    // HEADER
 {
     // minmax
     min.x = min.y = 0;
@@ -363,6 +365,7 @@ static void integraz_forza(PARTS * C, PART * A)
     A->spd.y += fsum.y;
 }
 
+
 static void integraz_forze()
 {
     // per ora usiamo l'approccio naif O(n²)
@@ -375,6 +378,7 @@ static void integraz_forze()
         }
     }
 }
+
 
 void parts_update(float dt)     // HEADER
 {
@@ -389,21 +393,12 @@ void parts_update(float dt)     // HEADER
             P->plist[A].pos.x += P->plist[A].spd.x * dt;
             P->plist[A].pos.y += P->plist[A].spd.y * dt;
 
-            //      // wrap. uso un playfield allargato, tanto il clipping è gratis
-            //      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
-            //      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
-            //      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
-            //      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
+//            // wrap. uso un playfield allargato, tanto il clipping è gratis
+//            if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
+//            if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
+//            if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
+//            if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
         }
     }
-
 }
 
-
-/*
-
-
-indent -linux -i4 -nut *.c
-
-
-*/

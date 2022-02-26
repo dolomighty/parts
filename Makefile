@@ -46,7 +46,8 @@ main : $(OBS)
 .PHONY : clean cl
 clean cl :
 	file * | awk '/ELF/ { gsub(/:.*/,"") ; print }' | xargs -r rm
-	rm -fR deps.inc dyn
+	rm -fR dyn
+	rm *~ .* 2> /dev/null
 
 .PHONY : rebuild re
 rebuild re : clean all
