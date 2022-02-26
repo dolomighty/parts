@@ -1,0 +1,4 @@
+gcc  `pkg-config --cflags sdl2` -Werror -I ../dyn/..  -I dyn -O3  -c -o main.o main.c
+gcc  `pkg-config --cflags sdl2` -Werror -I ../dyn/..  -I dyn -O3  -c -o parts.o parts.c
+gcc `pkg-config --cflags sdl2` -Werror -I ../dyn/..  -I dyn -O3 -o main main.o parts.o `pkg-config --libs   sdl2` -lm   
+./main

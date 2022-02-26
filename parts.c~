@@ -1,5 +1,5 @@
 
-#include <SDL.h>                // HEADER
+#include <SDL.h>		// HEADER
 
 #include <stdint.h>
 #include <time.h>
@@ -56,73 +56,73 @@ const float EPS = 1e-5;
 #include <stdlib.h>
 #include "main.h"
 
-void parts_init()               // HEADER
+void parts_init()		// HEADER
 {
     const RGB8 rgb[] = {
-        {255, 255, 255},        // white
-        {255, 63, 63},          // red
-        {63, 255, 63},          // green
-        {63, 63, 255},          // blu
-        {255, 128, 63},         // orange
-        {63, 63, 63},           // gray
-        {63, 255, 255},         // cyan
-        {255, 63, 255},         // magen
-        {255, 255, 63},         // yel
+	{255, 255, 255},	// white
+	{255, 63, 63},		// red
+	{63, 255, 63},		// green
+	{63, 63, 255},		// blu
+	{255, 128, 63},		// orange
+	{63, 63, 63},		// gray
+	{63, 255, 255},		// cyan
+	{255, 63, 255},		// magen
+	{255, 255, 63},		// yel
     };
 
     srand(time(0));
 
     int j;
     for (j = 0; j < CLASSI; j++) {
-        PARTS *P = &parts[j];
-        // genera le classi
+	PARTS *P = &parts[j];
+	// genera le classi
 
 //    // colore
 //    P->rgb.r = 64+rand()*(64-255L)/(RAND_MAX-1);
 //    P->rgb.g = 64+rand()*(64-255L)/(RAND_MAX-1);
 //    P->rgb.b = 64+rand()*(64-255L)/(RAND_MAX-1);
 
-        P->rgb = rgb[j];
+	P->rgb = rgb[j];
 
 //    P->mass = 1;
 //    P->drag = 0.1;
 //    P->radius = 1;
 
-        // genera una matrice di interazione
-        memset(P->interact_matrix, 0, sizeof(P->interact_matrix));
-        int i;
-        for (i = 0; i < CLASSI; i++) {
-            P->interact_matrix[i] = BIPORAND * 1;
-        }
+	// genera una matrice di interazione
+	memset(P->interact_matrix, 0, sizeof(P->interact_matrix));
+	int i;
+	for (i = 0; i < CLASSI; i++) {
+	    P->interact_matrix[i] = BIPORAND * 1;
+	}
 
-        // crea le particelle e le posiziona a casaccio
+	// crea le particelle e le posiziona a casaccio
 //    P->pcount=10;
-        P->pcount = 500;
-        int bytes = parts[j].pcount * sizeof(P->plist[0]);
-        P->plist = (PART *) malloc(bytes);
-        assert(P->plist);
-        memset(P->plist, 0, bytes);
+	P->pcount = 500;
+	int bytes = parts[j].pcount * sizeof(P->plist[0]);
+	P->plist = (PART *) malloc(bytes);
+	assert(P->plist);
+	memset(P->plist, 0, bytes);
 
-        for (i = 0; i < P->pcount; i++) {
+	for (i = 0; i < P->pcount; i++) {
 //      fprintf(stderr,"%d %f %f\n",i,p.x,p.y);
 //      P->plist[i].pos.x = BIPORAND*100 + WID/2;
 //      P->plist[i].pos.y = BIPORAND*100 + HGT/2;
 //      P->plist[i].spd.x = BIPORAND*10;
 //      P->plist[i].spd.y = BIPORAND*10;
 
-            // mettiamo le particelle in una traiettoria circolare orbitante il centro di massa iniziale
-            P->plist[i].pos.x = BIPORAND * 100;
-            P->plist[i].pos.y = BIPORAND * 100;
-            float rr =
-                sqrt(P->plist[i].pos.x * P->plist[i].pos.x +
-                     P->plist[i].pos.y * P->plist[i].pos.y);
-            float v = sqrt(20 / (rr + EPS));
-            P->plist[i].spd.x = -P->plist[i].pos.y * v / (sqrt(rr) + EPS);
-            P->plist[i].spd.y = +P->plist[i].pos.x * v / (sqrt(rr) + EPS);
+	    // mettiamo le particelle in una traiettoria circolare orbitante il centro di massa iniziale
+	    P->plist[i].pos.x = BIPORAND * 100;
+	    P->plist[i].pos.y = BIPORAND * 100;
+	    float rr =
+		sqrt(P->plist[i].pos.x * P->plist[i].pos.x +
+		     P->plist[i].pos.y * P->plist[i].pos.y);
+	    float v = sqrt(20 / (rr + EPS));
+	    P->plist[i].spd.x = -P->plist[i].pos.y * v / (sqrt(rr) + EPS);
+	    P->plist[i].spd.y = +P->plist[i].pos.x * v / (sqrt(rr) + EPS);
 
-            P->plist[i].pos.x += WID / 2;
-            P->plist[i].pos.y += HGT / 2;
-        }
+	    P->plist[i].pos.x += WID / 2;
+	    P->plist[i].pos.y += HGT / 2;
+	}
     }
 
     // similars attract, differents repel
@@ -154,8 +154,8 @@ static void draw_dots(SDL_Renderer * renderer, PARTS * P)
     SDL_Point xy[P->pcount];
     int A;
     for (A = 0; A < P->pcount; A++) {
-        xy[A].x = invlerp(min.x, max.x, P->plist[A].pos.x) * WID;
-        xy[A].y = invlerp(min.y, max.y, P->plist[A].pos.y) * HGT;
+	xy[A].x = invlerp(min.x, max.x, P->plist[A].pos.x) * WID;
+	xy[A].y = invlerp(min.y, max.y, P->plist[A].pos.y) * HGT;
     }
     SDL_SetRenderDrawColor(renderer, P->rgb.r, P->rgb.g, P->rgb.b, 255);
     SDL_RenderDrawPoints(renderer, xy, COUNT(xy));
@@ -168,16 +168,16 @@ static void draw_rects(SDL_Renderer * renderer, PARTS * P)
     SDL_Rect xywh[P->pcount];
     int A;
     for (A = 0; A < P->pcount; A++) {
-        xywh[A].x = invlerp(min.x, max.x, P->plist[A].pos.x) * WID - 1;
-        xywh[A].y = invlerp(min.y, max.y, P->plist[A].pos.y) * HGT - 1;
-        xywh[A].w = 3;
-        xywh[A].h = 3;
+	xywh[A].x = invlerp(min.x, max.x, P->plist[A].pos.x) * WID - 1;
+	xywh[A].y = invlerp(min.y, max.y, P->plist[A].pos.y) * HGT - 1;
+	xywh[A].w = 3;
+	xywh[A].h = 3;
     }
     SDL_SetRenderDrawColor(renderer, P->rgb.r, P->rgb.g, P->rgb.b, 255);
     SDL_RenderFillRects(renderer, xywh, COUNT(xywh));
 }
 
-void parts_draw(SDL_Renderer * renderer)        // HEADER
+void parts_draw(SDL_Renderer * renderer)	// HEADER
 {
     // minmax
     min.x = min.y = 0;
@@ -185,18 +185,18 @@ void parts_draw(SDL_Renderer * renderer)        // HEADER
     max.y = HGT;
     int C;
     for (C = 0; C < COUNT(parts); C++) {
-        PARTS *P = &parts[C];
-        int A;
-        for (A = 0; A < P->pcount; A++) {
-            if (min.x > P->plist[A].pos.x)
-                min.x = P->plist[A].pos.x;
-            if (min.y > P->plist[A].pos.y)
-                min.y = P->plist[A].pos.y;
-            if (max.x < P->plist[A].pos.x)
-                max.x = P->plist[A].pos.x;
-            if (max.y < P->plist[A].pos.y)
-                max.y = P->plist[A].pos.y;
-        }
+	PARTS *P = &parts[C];
+	int A;
+	for (A = 0; A < P->pcount; A++) {
+	    if (min.x > P->plist[A].pos.x)
+		min.x = P->plist[A].pos.x;
+	    if (min.y > P->plist[A].pos.y)
+		min.y = P->plist[A].pos.y;
+	    if (max.x < P->plist[A].pos.x)
+		max.x = P->plist[A].pos.x;
+	    if (max.y < P->plist[A].pos.y)
+		max.y = P->plist[A].pos.y;
+	}
     }
 
     // viewport iniziale per riferimento di scala
@@ -209,7 +209,7 @@ void parts_draw(SDL_Renderer * renderer)        // HEADER
     SDL_RenderDrawRect(renderer, &xywh);
 
     for (C = 0; C < COUNT(parts); C++) {
-        draw_dots(renderer, &parts[C]);
+	draw_dots(renderer, &parts[C]);
 //        draw_rects(renderer,&parts[C]);
     }
 
@@ -292,14 +292,14 @@ static void integraz_forza(PARTS * C, PART * A)
     XYf fsum = { 0, 0 };
     int ci;
     for (ci = 0; ci < COUNT(parts); ci++) {
-        int bi;
-        for (bi = 0; bi < parts[ci].pcount; bi++) {
-            PART *B = &parts[ci].plist[bi];
-            if (B == A)
-                continue;       // auto-interazione? no grazie
+	int bi;
+	for (bi = 0; bi < parts[ci].pcount; bi++) {
+	    PART *B = &parts[ci].plist[bi];
+	    if (B == A)
+		continue;	// auto-interazione? no grazie
 
-            XYf d;
-            float rr = delta(&d, &A->pos, &B->pos);     // d²
+	    XYf d;
+	    float rr = delta(&d, &A->pos, &B->pos);	// d²
 
 //      // oltre questa dist, non c'è interaz
 //      if(rr>10.0*10.0)continue;
@@ -312,10 +312,10 @@ static void integraz_forza(PARTS * C, PART * A)
 
 //      float f = 1/(rr+EPS);
 
-            // gnuplot -p -e 'plot [0:3] [0:7] (1/x**2)*(1-.01/(.01+x**4)),1/x**2'
+	    // gnuplot -p -e 'plot [0:3] [0:7] (1/x**2)*(1-.01/(.01+x**4)),1/x**2'
 
-            float range = 0.1;
-            float f = (1 / (rr + EPS)) * (1 - range / (range + rr * rr));
+	    float range = 0.1;
+	    float f = (1 / (rr + EPS)) * (1 - range / (range + rr * rr));
 
 //      // quasi https://it.wikipedia.org/wiki/Potenziale_di_Lennard-Jones
 //      float r6  = rr*rr*rr; // d²*³=d⁶
@@ -330,10 +330,10 @@ static void integraz_forza(PARTS * C, PART * A)
 //      fsum.x += d.x*f*C->interact_matrix[ci];
 //      fsum.y += d.y*f*C->interact_matrix[ci];
 
-            // la particella B è di classe ci
-            fsum.x += d.x / sqrt(rr) * f * C->interact_matrix[ci];
-            fsum.y += d.y / sqrt(rr) * f * C->interact_matrix[ci];
-        }
+	    // la particella B è di classe ci
+	    fsum.x += d.x / sqrt(rr) * f * C->interact_matrix[ci];
+	    fsum.y += d.y / sqrt(rr) * f * C->interact_matrix[ci];
+	}
     }
 
 //  // drag
@@ -369,41 +369,32 @@ static void integraz_forze()
     // poi impementerò una griglia di accelerazione
     int ci;
     for (ci = 0; ci < COUNT(parts); ci++) {
-        int ai;
-        for (ai = 0; ai < parts[ci].pcount; ai++) {
-            integraz_forza(&parts[ci], &parts[ci].plist[ai]);
-        }
+	int ai;
+	for (ai = 0; ai < parts[ci].pcount; ai++) {
+	    integraz_forza(&parts[ci], &parts[ci].plist[ai]);
+	}
     }
 }
 
-void parts_update(float dt)     // HEADER
+void parts_update(float dt)	// HEADER
 {
     integraz_forze();
 
     // integraz posizione
     int C;
     for (C = 0; C < COUNT(parts); C++) {
-        PARTS *P = &parts[C];
-        int A;
-        for (A = 0; A < P->pcount; A++) {
-            P->plist[A].pos.x += P->plist[A].spd.x * dt;
-            P->plist[A].pos.y += P->plist[A].spd.y * dt;
+	PARTS *P = &parts[C];
+	int A;
+	for (A = 0; A < P->pcount; A++) {
+	    P->plist[A].pos.x += P->plist[A].spd.x * dt;
+	    P->plist[A].pos.y += P->plist[A].spd.y * dt;
 
-            //      // wrap. uso un playfield allargato, tanto il clipping è gratis
-            //      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
-            //      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
-            //      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
-            //      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
-        }
+	    //      // wrap. uso un playfield allargato, tanto il clipping è gratis
+	    //      if( P->plist[A].pos.x <     -10 ) P->plist[A].pos.x += WID+20;  else
+	    //      if( P->plist[A].pos.x >= WID+10 ) P->plist[A].pos.x -= WID+20;
+	    //      if( P->plist[A].pos.y <     -10 ) P->plist[A].pos.y += HGT+20;  else
+	    //      if( P->plist[A].pos.y >= HGT+10 ) P->plist[A].pos.y -= HGT+20;
+	}
     }
 
 }
-
-
-/*
-
-
-indent -linux -i4 -nut *.c
-
-
-*/
