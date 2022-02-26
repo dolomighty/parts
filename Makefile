@@ -11,12 +11,13 @@ DIR:=$(shell echo "-I ../dyn/.." && find -L -mindepth 1 -type d -not -wholename 
 
 
 
-CC=gcc
-LIBS    = `pkg-config --libs   sdl2` -lm   
-CPPFLAGS= `pkg-config --cflags sdl2` -Werror $(DIR)
+CC=g++
+LIBS  = `pkg-config --libs   sdl2` -lm   
+CFLAGS= `pkg-config --cflags sdl2` -Werror $(DIR)
+CPPFLAGS=$(CFLAGS)
 
 # optim
-CPPFLAGS+=-O3
+CFLAGS+=-O3
 
 
 .PHONY : all
@@ -32,6 +33,7 @@ OBS+=main.o
 OBS+=parts.o
 OBS+=frame.o
 OBS+=loop.o
+OBS+=V2f.o
 
 
 

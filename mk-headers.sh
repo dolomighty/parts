@@ -11,10 +11,10 @@ rebuild(){
     echo "#ifndef $ARMOR"
     echo "#define $ARMOR"
     awk '
-    /[/][/] HEADERBEG/{ PASSTHRU=1 ; next }
-    /[/][/] HEADEREND/{ PASSTHRU=0 ; print ";" ; next } # ";" mmm... 
-    PASSTHRU { print }
-    /[/][/] HEADER/{
+    /[/][/] *HEADERBEG/{ PASSTHRU=1 ; next }
+    /[/][/] *HEADEREND/{ PASSTHRU=0 ; print ";" ; next } # ";" mmm... 
+    PASSTHRU { print ; next }
+    /[/][/] *HEADER/{
 
         ##include <SDL.h> // HEADER
         if(1==index($1,"#")){
@@ -51,7 +51,7 @@ rebuild(){
 
 
 mkdir -p dyn/
-grep -m 1 -l "//.*HEADER" *.c* \
+grep -m 1 -l "//.*HEADER" *.c *.cpp 2> /dev/null \
 | while read SRC ; do
     HDR=${SRC%.*}.h
     ARMOR=_${HDR/./_}_
